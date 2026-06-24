@@ -21,7 +21,7 @@ S3_BUCKET = "ci-cd-pipeline-alok"
 s3 = boto3.client("s3", region_name=AWS_REGION)
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 
-ASSIGNMENTS = dynamodb.Table("ci-cd-assginment")
+ASSIGNMENTS = dynamodb.Table("ci-cd-assignment")
 SUBMISSIONS = dynamodb.Table("ci-cd-submission")
 
 log.info("Backend initialized")
