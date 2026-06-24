@@ -1,16 +1,15 @@
 pipeline {
     agent any
 
-    // Parameters: values set once, picked automatically on webhook trigger
     parameters {
-        string(name: 'BACKEND_SERVER_IP', defaultValue: '<backend-server-ip>', description: 'Public IP of backend EC2 server')
+        string(name: 'BACKEND_SERVER_IP', defaultValue: '3.88.213.53', description: 'Public IP of backend EC2 server')
         string(name: 'DEPLOY_DIR', defaultValue: '/home/ubuntu/backend-app', description: 'Directory on backend server to deploy app')
     }
 
     environment {
         PYTHON = "/usr/bin/python3"
         VENV_DIR = "venv"
-        SSH_CREDENTIALS = 'backend-server-ssh' // Jenkins SSH credentials ID for backend server
+        SSH_CREDENTIALS = 'SSH-backend'
     }
 
     stages {
@@ -35,7 +34,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Setup Virtual Environment & Install Dependencies') {
             steps {
                 sshagent (credentials: [env.SSH_CREDENTIALS]) {
@@ -51,10 +50,9 @@ pipeline {
                                 python3 -m venv venv
                             fi
 
-                            echo 'Activating venv...'
-                            source venv/bin/activate
-
                             echo 'Installing dependencies...'
+                            . venv/bin/activate
+
                             pip install --upgrade pip
                             pip install -r requirements.txt
                         "
@@ -62,7 +60,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Stop Existing Backend') {
             steps {
                 sshagent (credentials: [env.SSH_CREDENTIALS]) {
@@ -77,7 +75,7 @@ else
     echo "No running backend app found."
 fi
 EOF
-            """
+                    """
                 }
             }
         }
@@ -89,11 +87,11 @@ EOF
                         echo "Starting backend server..."
                         ssh -o StrictHostKeyChecking=no ubuntu@${BACKEND_SERVER_IP} "
                             cd ${DEPLOY_DIR}
-                            source ${VENV_DIR}/bin/activate
+                            . ${VENV_DIR}/bin/activate
                             nohup python3 app.py > backend.log 2>&1 &
                         "
                     '''
-                }   
+                }
             }
         }
 
